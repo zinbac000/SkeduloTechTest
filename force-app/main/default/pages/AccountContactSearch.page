@@ -1,0 +1,54 @@
+<apex:page controller="SearchController" lightningStylesheets="true">
+    <apex:form>
+        <apex:pageBlock>
+            <apex:inputText value="{! Keyword}"/>
+            <apex:commandButton value="Search" reRender="search_results" />
+        </apex:pageBlock>
+        <apex:pageBlock title="Search Results">
+            <apex:pageBlockTable value="{! searchResults}" var="record" id="search_results">
+                    <apex:column>
+                        <apex:facet name="header">Record Name</apex:facet>
+                        {!record.RecordName}
+                    </apex:column>
+                    <apex:column>
+                        <apex:facet name="header">Record Type</apex:facet>
+                        {!record.RecordType}
+                    </apex:column>
+                    <apex:column>
+                        <apex:facet name="header">Click to open</apex:facet>
+                        <apex:outputLink value="/{!record.RecordId}" target="_blank">View</apex:outputLink>
+                    </apex:column>
+                    <apex:column>
+                        <apex:facet name="header">Counter</apex:facet>
+                        <span id="{!record.RecordId}">{!FLOOR(record.Counter)}</span>
+                    </apex:column>
+                    <apex:column>
+                        <apex:facet name="header">Click to update counter</apex:facet>
+                        <apex:commandLink onclick="incrementCounter('{!record.RecordId}', '{!record.RecordType}')" reRender="none" value="Increment Counter"/>
+                    </apex:column>
+                </apex:pageBlockTable>     
+        </apex:pageBlock>
+    </apex:form>
+
+    <script type="text/javascript">
+        function incrementCounter(recordId, recordType) {
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.SearchController.incrementCounter}',
+                recordId,
+                recordType,
+                function(result, event) {
+                    if (event.status) {
+                        console.log(result);
+                        const spanEl = document.getElementById(recordId).innerHTML = result;
+                        console.log(spanEl);
+                    } else if (event.type === 'exception') {
+                        console.log(event.message + '\n' + event.where);
+                    } else {
+                        console.log(event.message);
+                    }
+                },
+                {escape: true}
+            )
+        }
+    </script>
+</apex:page>
